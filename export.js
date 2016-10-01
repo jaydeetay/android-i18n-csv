@@ -59,18 +59,38 @@ function load_strings(string_map, lang, dir, filename) {
   var filecontents = fs.readFileSync(dir + "/" + filename);
   parser.parseString(filecontents, function (err, result) {
     //eyes.inspect(result);
-    resources = result['resources']
+    var resources = result['resources'];
     if (!resources) return;
-    strings = resources['string'];
-    if (!strings) return;  // TODO string-array
-    for (var i = 0; i < strings.length; ++i) {
-      entry = strings[i];
-      id = entry["$"]["name"]
-      translation_description = entry["$"]["translation_description"] || ""
-      value = entry["_"]
-      add_or_update_entry(string_map, lang, id, translation_description, filename, value);
-    //console.log("Done with " + filename);
+    var strings = resources['string'];
+    var string_arrays = resources['string-array'];
+    if (strings) {
+      for (var i = 0; i < strings.length; ++i) {
+        var entry = strings[i];
+        var id = entry["$"]["name"];
+        var translation_description = entry["$"]["translation_description"] || "";
+        var value = entry["_"];
+        add_or_update_entry(string_map, lang, id, translation_description, filename, value);
+      //console.log("Done with " + filename);
+      }
+    } else if (string_arrays) {
+      //eyes.inspect(string_arrays);
+      for (var i = 0; i < string_arrays.length; ++i) {
+        var entry = string_arrays[i];
+        var id = entry["$"]["name"];
+        var items = entry['item'];
+        for (var j = 0; j < items.length; ++j) {
+          var item = items[j];
+          var translation_description = "";
+          if (item["$"]) {
+            translation_description = entry["$"]["translation_description"] || "";
+          }
+          var value = item["_"]
+          add_or_update_entry(string_map, lang, id + ":" + j, translation_description, filename, value);
+        }
+      //console.log("Done with " + filename);
+      }
     }
+    // Otherwise skip
   });
 } 
 
