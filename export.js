@@ -27,6 +27,32 @@ var eyes = require('eyes');
 var xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 
+function add_or_update_entry(string_map, lang, id, translation_description, filename, value) {
+  // English is special
+  var map_entry;
+  if (lang === 'en') {
+    map_entry = {
+      "filename": filename,
+      "translation_description": translation_description
+    }
+    map_entry[lang] = value || "";
+  } else {
+    map_entry = string_map[id];
+    if (!map_entry) {
+      //console.log("Orphaned string " + id + " in lang " + lang);
+      map_entry = {
+	"filename": "orphaned.xml",
+	"translation_description": translation_description,
+	"en": ""
+      }
+    } else {
+      map_entry[lang] = value;
+    }
+  }
+  string_map[id] = map_entry;
+}
+
+
 function load_strings(string_map, lang, dir, filename) {
   //console.log("Loading strings for lang " + lang + " in file " + filename);
   var parser = new xml2js.Parser({async: false});
@@ -42,30 +68,9 @@ function load_strings(string_map, lang, dir, filename) {
       id = entry["$"]["name"]
       translation_description = entry["$"]["translation_description"] || ""
       value = entry["_"]
-      // console.log(id + ": " + value);
-      // English is special
-      if (lang === 'en') {
-	map_entry = {
-	  "filename": filename,
-	  "translation_description": translation_description
-	}
-	map_entry[lang] = value || "";
-      } else {
-        map_entry = string_map[id];
-        if (!map_entry) {
-          //console.log("Orphaned string " + id + " in lang " + lang);
-          map_entry = {
-	    "filename": "orphaned.xml",
-	    "translation_description": translation_description,
-            "en": ""
-          }
-	} else {
-	  map_entry[lang] = value;
-        }
-      }
-      string_map[id] = map_entry;
-    }
+      add_or_update_entry(string_map, lang, id, translation_description, filename, value);
     //console.log("Done with " + filename);
+    }
   });
 } 
 
