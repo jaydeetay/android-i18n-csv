@@ -13,10 +13,10 @@ from this directory to get the dependencies.
 # Export
 
 ```bash
-node export.js --xml /path/to/strings.xml --origlang en --wantedlangs it,de,fr,nl
+node export.js --res /path/to/res --wantedlangs it,de,fr,nl (optional)
 ```
 
-The command above will generate a csv file with all the required columns in order to manage translations for the given languages.
+The command above will generate a csv file with all the required columns in order to manage translations for the given languages.  NOTE: wantedlangs not yet implemented
 
 
 # Import
