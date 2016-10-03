@@ -30,7 +30,6 @@ var parser = new xml2js.Parser();
 function add_or_update_entry(
     string_map, lang, id, translation_description, filename, value, type) {
   // English is special
-  console.log("Add or update id, value, td " + id + " " + value + "-" + translation_description);
   var map_entry;
   if (lang === 'en') {
     map_entry = {
@@ -62,7 +61,7 @@ function load_strings(string_map, lang, dir, filename) {
   var parser = new xml2js.Parser({async: false});
   var filecontents = fs.readFileSync(dir + "/" + filename);
   parser.parseString(filecontents, function (err, result) {
-    eyes.inspect(result);
+    //eyes.inspect(result);
     var resources = result['resources'];
     if (!resources) return;
     var strings = resources['string'];
@@ -91,16 +90,10 @@ function load_strings(string_map, lang, dir, filename) {
             // of the xml tag is obtained differently.
             value = item["_"]
           }
-          console.log("! ");
-          eyes.inspect(item);
-          console.log(id);
-          console.log(translation_description);
-          console.log(value);
-          console.log("===");
+          //eyes.inspect(item);
 
           add_or_update_entry(string_map, lang, id + ":" + j, translation_description, filename, value, "string-array");
         }
-      //console.log("Done with " + filename);
       }
     }
     // Otherwise skip
@@ -174,7 +167,7 @@ for (var id in all_strings) {
   csv_data.push(row);
 }
 
-console.log(csv_data);
+//console.log(csv_data);
 writeToCsv(csv_data);
 return;
 

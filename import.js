@@ -15,33 +15,24 @@ if (typeof(argv.csv) == 'undefined' || typeof(argv.folderout) == 'undefined') {
   return;
 }
 
-/*
-   fs.statSync(config.csvFile, function (err, stats) {
-  if (err) {
-	console.log("File not found or not readable");
-		} else {
-			fs.readFile(config.csvFile, function(err, data) {
-				if (err) {
-					console.log("File not readable");
-
-				} else {
-					var converted = [];
-					csv()
-					.from(data, {'columns': true})
-					.on('data',function(data,index) {
-						converted.push(data);
-					})
-					.on('end', function() {
-						saveTranslations(converted);
-					});
-
-
-
-				}
-			});
-		}
-	} );
-*/
+function reprocessStringArrayDocument(doc) {
+  // console.log("Reprocessing:");
+  // eyes.inspect(doc);
+  stringArrays = doc["resources"]["string-array"];
+  newStringArrays = [];
+  // eyes.inspect(stringArrays);
+  _.forEach(stringArrays, function(items, name, stringArrays) {
+      // console.log(name);
+      // console.log(items);
+      newStringArray = {
+        "$": {name: name},
+        "item": items};
+      newStringArrays.push(newStringArray);
+  });
+  doc["resources"]["string-array"] = newStringArrays; 
+  // console.log("Reprocessed:");
+  // eyes.inspect(doc);
+}
 
 
 function parseContentForAndroidCompliancy(str) {
@@ -62,14 +53,14 @@ function saveTranslations(translationData) {
         var fileKey = [entry["file"], lang];
         var type = entry["type"];
         if (type == "string-array") {
-          console.log("====");
+          // console.log("====");
           var fullId = entry["id"].split(":");
           // console.log(fullId);
           var id = fullId[0];
           var num = fullId[1];
-          console.log(id);
-          console.log(num);
-          console.log(lang); 
+          // console.log(id);
+          // console.log(num);
+          // console.log(lang); 
           var description = entry["description"] || "";
           var currentDoc = fileToData[fileKey];
           var itemEntry = {
@@ -80,19 +71,21 @@ function saveTranslations(translationData) {
             var stringArrayEntries = currentDoc["resources"]["string-array"]
             // Append
             var stringArrayEntry = stringArrayEntries[id] || []
-            console.log(stringArrayEntry);
-            console.log(itemEntry);
+            // console.log("append to:");
+            // console.log(stringArrayEntry);
+            // console.log("with: ");
+            // console.log(itemEntry);
             stringArrayEntry.push(itemEntry);
             stringArrayEntries[id] = stringArrayEntry;
           } else {
             // Create
             var stringArrayEntries = {"string-array" : {}};
-            stringArrayEntries["string-array"][id] = itemEntry;
-            console.log(stringArrayEntries);
+            stringArrayEntries["string-array"][id] = [itemEntry];
+            // console.log(stringArrayEntries);
             currentDoc = {"resources" : stringArrayEntries};
             fileToData[fileKey] = currentDoc;
           }
-        } else if (type == "string") { // fix
+        } else if (type == "string") {
           return;
           var id = entry["id"];
           var description = entry["description"] || "";
@@ -117,59 +110,18 @@ function saveTranslations(translationData) {
   }
   // eyes.inspect(fileToData);
   _.forEach(fileToData, function(docObj, fileKey, fileToData) {
-    console.log(fileKey);
-    eyes.inspect(docObj);
+    // console.log(fileKey);
+    // eyes.inspect(docObj);
+    if (docObj["resources"]["string-array"]) {
+      reprocessStringArrayDocument(docObj);
+    }
     //console.log();
     var builder = new xml2js.Builder();
     var xml = builder.buildObject(docObj, {rootName: "resources"});
     console.log(xml);
   });
   /*
-    fileKey = {entry["file"], entry["
-
-
-  var columns = Object.keys(translationData[0]);
-  var NUM_METADATA_COLS = 3;
-  var nLanguages = columns.length - NUM_META_DATA_COLS;
-  for (var i=0; i<nLanguages; i++) {
-		var languageIdx	= i+2;
-		var languageKey = columns[languageIdx];
-		var doc = "<resources>\n";
-		var stringArrays = {};
-		for (var row=0; row<translationData.length; row++) {
-			var item = translationData[row];
-			if (item.type == 'string-array') {
-				if ( typeof(stringArrays[item.Key]) == 'undefined') {
-					stringArrays[item.Key] = [];
-				}
-				stringArrays[item.Key].push(parseContentForAndroidCompliancy(item[languageKey]));
-			} else {
-				if (typeof(item[languageKey]) == 'undefined' || item[languageKey] == null ) {
-					console.log("Skipped "+item.Key+" Language: "+languageKey);
-				} else {
-					var extraAttributes = '';
-					if (parseContentForAndroidCompliancy(item[languageKey]).indexOf('%s') != -1) {
-						extraAttributes = ' formatted="false" ';
-					}
-
-					doc+="\t<string name=\""+item.Key+"\""+extraAttributes+">"+parseContentForAndroidCompliancy(item[languageKey])+"</string>\n";
-				}
-			}
-		}
-
-		// Adding stringarrays
-		for (key in stringArrays) {
-			doc +="\t<string-array name=\""+key+"\">\n";
-			for (item in stringArrays[key]) {
-				doc +="\t\t<item>"+stringArrays[key][item]+"</item>\n";
-			}
-			doc +="\t</string-array>\n";
-		}
-
-		doc+='</resources>';
-		writeXml(languageKey, doc);
-
-	}
+     writeXml(languageKey, doc);
         */
 
 }
