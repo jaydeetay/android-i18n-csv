@@ -171,7 +171,7 @@ for (var id in all_strings) {
 writeToCsv(csv_data);
 return;
 
-
+// TODO - replace this with the csv library.
 function writeToCsv(csvArr) {
   var stringForFile = '';
   for (var i = 0; i < csvArr.length; ++i) {
@@ -182,13 +182,13 @@ function writeToCsv(csvArr) {
       if (str.includes('\n')) {
         str = "Multiline entry - see file";
       }
-      str = str.replace(/\\'/g, '\'');
+      /*str = str.replace(/\\'/g, '\'');
       if (str.indexOf('"') != -1) {
         str = str.replace(/"/g, '\\"\\"');
         str = '"' + str + '"';
       } else if (str.indexOf(',') != -1) {
         str = '"' + str + '"';
-      }
+      }*/
       rowStr += ',' + str;
     }
     rowStr = rowStr.substring(1);
