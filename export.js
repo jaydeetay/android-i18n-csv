@@ -27,12 +27,15 @@ var eyes = require('eyes');
 var xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 
-function add_or_update_entry(string_map, lang, id, translation_description, filename, value) {
+function add_or_update_entry(
+    string_map, lang, id, translation_description, filename, value, type) {
   // English is special
+  console.log("Add or update id, value, td " + id + " " + value + "-" + translation_description);
   var map_entry;
   if (lang === 'en') {
     map_entry = {
       "filename": filename,
+      "type": type,
       "translation_description": translation_description
     }
     map_entry[lang] = value || "";
@@ -42,6 +45,7 @@ function add_or_update_entry(string_map, lang, id, translation_description, file
       //console.log("Orphaned string " + id + " in lang " + lang);
       map_entry = {
 	"filename": "orphaned.xml",
+        "type": type,
 	"translation_description": translation_description,
 	"en": ""
       }
@@ -58,7 +62,7 @@ function load_strings(string_map, lang, dir, filename) {
   var parser = new xml2js.Parser({async: false});
   var filecontents = fs.readFileSync(dir + "/" + filename);
   parser.parseString(filecontents, function (err, result) {
-    //eyes.inspect(result);
+    eyes.inspect(result);
     var resources = result['resources'];
     if (!resources) return;
     var strings = resources['string'];
@@ -69,23 +73,32 @@ function load_strings(string_map, lang, dir, filename) {
         var id = entry["$"]["name"];
         var translation_description = entry["$"]["translation_description"] || "";
         var value = entry["_"];
-        add_or_update_entry(string_map, lang, id, translation_description, filename, value);
-      //console.log("Done with " + filename);
+        add_or_update_entry(string_map, lang, id, translation_description, filename, value, "string");
       }
     } else if (string_arrays) {
       //eyes.inspect(string_arrays);
       for (var i = 0; i < string_arrays.length; ++i) {
         var entry = string_arrays[i];
         var id = entry["$"]["name"];
-        var items = entry['item'];
+        var items = entry["item"];
         for (var j = 0; j < items.length; ++j) {
           var item = items[j];
           var translation_description = "";
+          var value = item;
           if (item["$"]) {
-            translation_description = entry["$"]["translation_description"] || "";
+            translation_description = item["$"]["translation_description"] || "";
+            // Ugly API wart - if there are no attributes the value
+            // of the xml tag is obtained differently.
+            value = item["_"]
           }
-          var value = item["_"]
-          add_or_update_entry(string_map, lang, id + ":" + j, translation_description, filename, value);
+          console.log("! ");
+          eyes.inspect(item);
+          console.log(id);
+          console.log(translation_description);
+          console.log(value);
+          console.log("===");
+
+          add_or_update_entry(string_map, lang, id + ":" + j, translation_description, filename, value, "string-array");
         }
       //console.log("Done with " + filename);
       }
@@ -149,19 +162,19 @@ for (var i = 0; i < all_other_value_dirs.length; ++i) {
 // console.log(all_langs);
 // eyes.inspect(all_strings);
 
-header = ['id', 'file', 'description', 'en'].concat(all_langs);
+header = ['id', 'file', 'type', 'description', 'en'].concat(all_langs);
 csv_data = [header];
 // console.log(header);
 
 for (var id in all_strings) {
-  row = [id, all_strings[id]['filename'], all_strings[id]['translation_description'], all_strings[id]['en']];
+  row = [id, all_strings[id]['filename'], all_strings[id]['type'], all_strings[id]['translation_description'], all_strings[id]['en']];
   for (var i = 0; i < all_langs.length; ++i) {
     row.push(all_strings[id][all_langs[i]] || "");
   }
   csv_data.push(row);
 }
 
-//console.log(csv_data);
+console.log(csv_data);
 writeToCsv(csv_data);
 return;
 

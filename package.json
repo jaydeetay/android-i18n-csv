@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "An Android string to CSV converter based on android-i18n-csv",
   "dependencies": {
-    "csv": "^0.0.16",
+    "csv-parse": "^1.1.7",
     "eyes": "^0.1.7",
     "optimist": "^0.3.4",
     "underscore": "^1.8.3",
